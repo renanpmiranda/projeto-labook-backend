@@ -1,11 +1,13 @@
+import { USER_ROLES, UserDB, UserModel } from './../types';
+
 export class User {
     constructor(
         private id: string,
         private name: string,
         private email: string,
         private password: string,
-        private role: string,
-        private created_at: string,
+        private role: USER_ROLES,
+        private createdAt: string,
     ) {}
 
     public getId = (): string => {
@@ -36,17 +38,39 @@ export class User {
         this.password = newPassword
     }
 
-    public getRole = (): string => {
+    public getRole = (): USER_ROLES => {
         return this.role
     }
-    public setRole = (newRole: string) => {
+    public setRole = (newRole: USER_ROLES) => {
         this.role = newRole
     }
 
     public getCreatedAt = (): string => {
-        return this.created_at
+        return this.createdAt
     }
     public setCreatedAt = (newCreatedAt: string) => {
-        this.created_at = newCreatedAt
+        this.createdAt = newCreatedAt
+    }
+
+    public toDBModel(): UserDB {
+        return {
+            id: this.id,
+            name: this.name,
+            email: this.email,
+            password: this.password,
+            role: this.role,
+            created_at: this.createdAt
+        }
+    }
+
+    public toBusinessModel(): UserModel {
+        return {
+            id: this.id,
+            name: this.name,
+            email: this.email,
+            password: this.password,
+            role: this.role,
+            createdAt: this.createdAt
+        }
     }
 }

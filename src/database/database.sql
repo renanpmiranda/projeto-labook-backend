@@ -34,11 +34,11 @@ CREATE TABLE likes_dislikes (
 
 DROP TABLE likes_dislikes;
 
-INSERT INTO users (id, name, email, password, role)
+INSERT INTO users (name, email, password, role)
 VALUES
-    ("u001", "Fulano", "fulano@email.com", "Fulano123", "normal"),
-    ("u002", "Beltrano", "beltrano@email.com", "Beltrano123", "normal"),
-    ("u003", "Ciclano", "ciclano@email.com", "Ciclano123", "normal");
+    ("u001","Fulano", "fulano@email.com", "Fulano123", "NORMAL"),
+    ("u002","Beltrano", "beltrano@email.com", "Beltrano123", "NORMAL"),
+    ("u003", "Ciclano", "ciclano@email.com", "Ciclano123", "NORMAL");
 
 SELECT * FROM users;
 

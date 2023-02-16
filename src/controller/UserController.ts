@@ -1,57 +1,23 @@
-import { UserDatabase } from './../database/UserDatabase';
 import { Request, Response } from 'express';
-import { User } from '../models/User';
+import { UserBusiness } from './../business/UserBusiness';
+import { SignupInput, LoginInput } from './../dtos/userDTO';
 
 export class UserController {
+    constructor(
+        private userBusiness: UserBusiness
+    ) {}
 
-    public signUp = async (req: Request, res: Response) => {
+    public signup = async (req: Request, res: Response) => {
         try {
-            const { name, email, password } = req.body
-
-            if (typeof name !== "string") {
-                res.status(400)
-                throw new Error("'name' deve ser string")
+            const input: SignupInput = {
+                name: req.body.name,
+                email: req.body.email,
+                password: req.body.password
             }
-
-            if (typeof email !== "string") {
-                res.status(400)
-                throw new Error("'email' deve ser string")
-            }
-
-            if (typeof password !== "string") {
-                res.status(400)
-                throw new Error("'password' deve ser string")
-            }
-
-            const userDatabase = new UserDatabase()
-            const emailDBExists = await userDatabase.findEmail(email)
-
-            if (emailDBExists) {
-                res.status(400)
-                throw new Error("'email' já cadastrado.")
-            }
-
-            const newUser = new User(
-                "u004",
-                name,
-                email,
-                password,
-                "normal",
-                new Date().toISOString()
-            )
-
-            const newUserDB = {
-                id: newUser.getId(),
-                name: newUser.getName(),
-                email: newUser.getEmail(),
-                password: newUser.getPassword(),
-                role: newUser.getRole(),
-                created_at: newUser.getCreatedAt()
-            }
-
-            const newUserDatabase = userDatabase.signUp(newUserDB)
-
-            res.status(201).send("Usuário criado com sucesso.")
+            
+            const output = await this.userBusiness.signup(input)
+    
+            res.status(201).send(output)
 
         } catch (error) {
             console.log(error)
@@ -70,20 +36,14 @@ export class UserController {
 
     public login = async (req: Request, res: Response) => {
         try {
-            const { email, password } = req.body
-
-            if (typeof email !== "string") {
-                res.status(400)
-                throw new Error("'email' deve ser string")
+            const input: LoginInput = {
+                email: req.body.email,
+                password: req.body.password
             }
 
-            if (typeof password !== "string") {
-                res.status(400)
-                throw new Error("'password' deve ser string")
-            }
-
-            // INSERIR LÓGICA DE LOGIN
-
+            const output = await this.userBusiness.login(input)
+    
+            res.status(200).send(output)
         } catch (error) {
             console.log(error)
     

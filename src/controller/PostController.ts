@@ -1,25 +1,24 @@
+import { GetPostsInput, CreatePostInput } from './../dtos/postDTO';
 import { Request, Response } from 'express';
+import { PostBusiness } from '../business/PostBusiness';
 import { Post } from '../models/Post';
 import { PostDatabase } from './../database/PostDatabase';
 
 export class PostController {
+    constructor(
+        private postBusiness: PostBusiness
+    ) {}
 
     public getPosts = async (req: Request, res: Response) => {
         try {
-            const postDatabase = new PostDatabase()
-            const postsDB = await postDatabase.getPosts()
+            const input: GetPostsInput = {
+                q: req.query.q as string,
+                token: req.headers.authorization
+            }
 
-            const posts: Post[] = postsDB.map((postDB) => new Post (
-                postDB.id,
-                postDB.creator_id,
-                postDB.content,
-                postDB.likes,
-                postDB.dislikes,
-                postDB.created_at,
-                postDB.updated_at
-            ))
+            const output = await this.postBusiness.getPosts(input)
 
-            res.status(200).send(posts)
+            res.status(200).send(output)
 
         } catch (error) {
             console.log(error)
@@ -38,8 +37,14 @@ export class PostController {
 
     public createPost = async (req: Request, res: Response) => {
         try {
+            const input: CreatePostInput = {
+                content: req.body.content,
+                token: req.headers.authorization
+            }
 
-            // IMPLEMENTAR LÓGICA DE CRIAÇÃO DE POST
+            const output = await this.postBusiness.createPost(input)
+            
+            res.status(201).send(output)
 
         } catch (error) {
             console.log(error)

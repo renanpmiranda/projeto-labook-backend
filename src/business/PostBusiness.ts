@@ -1,15 +1,19 @@
+import { LikeOrDislikeDatabase } from './../database/LikeOrDislikeDatabase';
+import { PostDB, USER_ROLES, LikesDB } from './../types';
+import { Post } from './../models/Post';
+import { NotFoundError } from './../errors/NotFoundError';
 import { IdGenerator } from './../services/IdGenerator';
 import { BadRequestError } from './../errors/BadRequestError';
-import { GetPostsInput, GetPostsOutput, CreatePostInput, CreatePostOutput } from './../dtos/postDTO';
+import { GetPostsInput, GetPostsOutput, CreatePostInput, CreatePostOutput, EditPostInput, EditPostOutput, DeletePostInput, DeletePostOutput, LikeOrDislikePostInput, LikeOrDislikePostOutput } from './../dtos/postDTO';
 import { TokenManager } from './../services/TokenManager';
 import { PostDatabase } from './../database/PostDatabase';
-import { Post } from '../models/Post';
 
 export class PostBusiness {
     constructor(
         private postDatabase: PostDatabase,
         private idGenerator: IdGenerator,
-        private tokenManager: TokenManager
+        private tokenManager: TokenManager,
+        private likeOrDislikeDatabase: LikeOrDislikeDatabase
     ) {}
 
     public getPosts = async (input: GetPostsInput): Promise<GetPostsOutput> => {
@@ -58,7 +62,7 @@ export class PostBusiness {
         }
 
         if (typeof content !== "string") {
-            throw new BadRequestError("'q' deve ser string")
+            throw new BadRequestError("'content' deve ser string")
         }
 
         if (typeof token !== "string"){
@@ -90,6 +94,170 @@ export class PostBusiness {
             message: "Post criado com sucesso",
             content
         }
+
+        return output
+    }
+
+    public editPost = async (input: EditPostInput) => {
+        const { idToEdit, newContent, token } = input        
+
+        if (newContent === undefined) {
+            throw new BadRequestError("'content' não pode ser nulo")
+        }
+
+        if (typeof newContent !== "string") {
+            throw new BadRequestError("'content' deve ser string")
+        }
+
+        if (typeof token !== "string"){
+            throw new BadRequestError("'token' inválido. Deve ser uma string")
+        }
+
+        const payload = this.tokenManager.getPayload(token)
+
+        if (payload === null){
+            throw new BadRequestError("'token' inválido")
+        }
+
+        const postDB = await this.postDatabase.findPostById(idToEdit)
+
+        if (!postDB) {
+            throw new NotFoundError("Post não encontrado")
+        }
+
+        if (postDB.creator_id !== payload.id){
+            throw new BadRequestError("Apenas o autor pode editar o post")
+        }
+
+        const post = new Post(
+            postDB.id,
+            postDB.creator_id,
+            postDB.content,
+            postDB.likes,
+            postDB.dislikes,
+            postDB.created_at,
+            postDB.updated_at
+        )
+
+        post.setContent(newContent)
+
+        const updatedPostDB: PostDB = {
+            id: post.getId(),
+            creator_id: post.getCreatorId(),
+            content: post.getContent(),
+            likes: post.getLikes(),
+            dislikes: post.getDislikes(),
+            created_at: post.getCreatedAt(),
+            updated_at: post.getUpdatedAt()
+        }
+
+        await this.postDatabase.updatePost(updatedPostDB)
+
+        const output: EditPostOutput = {
+            message: "Post editado com sucesso",
+            content: post.getContent()
+        }
+
+        return output
+    }
+
+    public deletePost = async (input: DeletePostInput) => {
+        const { idToDelete, token } = input
+
+        if (typeof token !== "string"){
+            throw new BadRequestError("'token' inválido. Deve ser uma string")
+        }
+
+        const payload = this.tokenManager.getPayload(token)
+
+        if (payload === null){
+            throw new BadRequestError("'token' inválido")
+        }
+
+        const postDB = await this.postDatabase.findPostById(idToDelete)
+
+        if (!postDB) {
+            throw new NotFoundError("Post não encontrado")
+        }
+
+        if(payload.role !== USER_ROLES.ADMIN){
+            if (postDB.creator_id !== payload.id){
+                throw new BadRequestError("Apenas o autor pode deletar o post")
+            }
+        }        
+
+        await this.postDatabase.deletePost(idToDelete)
+
+        const output: DeletePostOutput = {
+            message: "Post deletado com sucesso"
+        }
+
+        return output
+    }
+
+    public likeOrDislikePost = async (input: LikeOrDislikePostInput) => {
+        const { postId, like, token } = input
+
+        if (like === undefined) {
+            throw new BadRequestError("'like' não pode ser nulo")
+        }
+
+        if (typeof like !== "boolean") {
+            throw new BadRequestError("'like' deve ser boolean")
+        }
+
+        if (typeof token !== "string"){
+            throw new BadRequestError("'token' inválido. Deve ser uma string")
+        }
+
+        const payload = this.tokenManager.getPayload(token)
+
+        if (payload === null){
+            throw new BadRequestError("'token' inválido")
+        }
+
+        const postDB = await this.postDatabase.findPostById(postId)
+
+        if (!postDB) {
+            throw new NotFoundError("Post não encontrado")
+        }
+
+        if (postDB.creator_id === payload.id){
+            throw new BadRequestError("O autor não pode dar like ou dislike no próprio post")
+        }
+
+        const post = new Post(
+            postDB.id,
+            postDB.creator_id,
+            postDB.content,
+            postDB.likes,
+            postDB.dislikes,
+            postDB.created_at,
+            postDB.updated_at
+        )       
+
+        if (like === true) {
+            post.setLikes(1)            
+        } else if (like === false) {
+            post.setLikes(0)
+        }        
+
+        const updatedPostDB: PostDB = {
+            id: post.getId(),
+            creator_id: post.getCreatorId(),
+            content: post.getContent(),
+            likes: post.getLikes(),
+            dislikes: post.getDislikes(),
+            created_at: post.getCreatedAt(),
+            updated_at: post.getUpdatedAt()
+        }
+
+        await this.postDatabase.likeOrDislikePost(updatedPostDB)
+
+        const output: LikeOrDislikePostOutput = {
+            message: "Like ou dislike efetuado com sucesso",
+            post
+        } 
 
         return output
     }

@@ -1,3 +1,4 @@
+import { Post } from './../models/Post';
 import { PostModel } from './../types';
 
 export interface GetPostsInput {
@@ -15,4 +16,35 @@ export interface CreatePostInput {
 export interface CreatePostOutput {
     message: string,
     content: string
+}
+
+export interface EditPostInput {
+    idToEdit: string,
+    newContent: unknown,
+    token: string | undefined
+}
+
+export interface EditPostOutput {
+    message: string,
+    content: string
+}
+
+export interface DeletePostInput {
+    idToDelete: string,
+    token: string | undefined
+}
+
+export interface DeletePostOutput {
+    message: string
+}
+
+export interface LikeOrDislikePostInput {
+    postId: string,
+    like: unknown,
+    token: string | undefined
+}
+
+export interface LikeOrDislikePostOutput {
+    message: string,
+    post: Post
 }

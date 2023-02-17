@@ -40,6 +40,10 @@ VALUES
     ("u002", "Beltrano", "beltrano@email.com", "Beltrano123", "NORMAL"),
     ("u003", "Ciclano", "ciclano@email.com", "Ciclano123", "NORMAL");
 
+INSERT INTO users (id, name, email, password, role)
+VALUES
+    ("a3718fcc-c8bd-4cf0-a486-9be3d1de9525", "newAdmin", "newAdmin@email.com", "$2a$12$2oFqENkWpENMzLPGmopd8eUaNreomCUCqGZWkX3IFDOxmv7bgsxrC", "ADMIN");
+
 SELECT * FROM users;
 
 INSERT INTO posts (id, creator_id, content)
